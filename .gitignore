@@ -32,14 +32,14 @@ coverage/
 tmp/
 temp/
 
-# Confidential files
+# Credentials and Secrets
 confidencial/
 credentials.json
 token.pickle
 *.pickle
-
-# Misc
-.cache/
-.local/
+*.pem
+**/oauth2*
+**/client_secret*
+**/service-account*
 
 
