@@ -36,26 +36,51 @@ def init_routes(app):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    @app.route('/send/html', methods=['POST'])
-    def send_html():
+    @app.route('/send/otp', methods=['POST'])
+    def send_otp():
         try:
             data = request.get_json()
-            required_fields = ['sender', 'to', 'subject', 'html_content']
-            
-            if not all(field in data for field in required_fields):
-                return jsonify({"error": "Missing required fields"}), 400
+            required_fields = ['to', 'otp']
 
+            # Validar campos obligatorios
+            if not all(field in data for field in required_fields):
+                return jsonify({"success": False, "message": "Faltan campos obligatorios"}), 400
+
+            email = data['to']
+            otp = data['otp']
+
+        # Preparar contenido del correo
+            subject = "🔐 Tu código de verificación - Explavia"
+            html_content = f"""
+            <html>
+                <body>
+                    <h2>Tu código de verificación</h2>
+                    <p>Usa este código para completar tu verificación:</p>
+                    <h3>{otp}</h3>
+                    <p>Este código expirará en unos minutos.</p>
+                </body>
+            </html>
+            """
+
+            # Inicializar servicio Gmail
             service = GmailService.get_service()
-            
+
+            # Construir mensaje
             message = MessageBuilder.create_html_message(
-                sender=data['sender'],
-                to=data['to'],
-                subject=data['subject'],
-                html_content=data['html_content']
+                sender="no-reply@explavia.com",
+                to=email,
+                subject=subject,
+                html_content=html_content
             )
-            
+
+            # Enviar correo
             result = GmailService.send_message(service, 'me', message)
-            return jsonify(result)
-        
+
+            return jsonify({
+                "success": True,
+                "message": "Código de verificación enviado a tu correo",
+                "result": result
+            }), 200
+
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"success": False, "message": str(e)}), 500
